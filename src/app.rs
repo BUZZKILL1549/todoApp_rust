@@ -6,16 +6,18 @@ const FILE_PATH: &str = "/home/buzzkill/Documents/Projects/rust/todo/todoFile.js
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Todo {
+    pub id: usize,
     pub name: String,
     pub priority: u8,
     pub completed: bool,
 }
 
 impl Todo {
-    pub fn new(name: String, priority: u8, completed: bool) -> Result<Self, Error> {
+    pub fn new(id: usize, name: String, priority: u8, completed: bool) -> Result<Self, Error> {
         Self::create_if_not_present().expect("Failed to create file.");
 
         Ok(Self {
+            id,
             name,
             priority,
             completed,
@@ -44,6 +46,28 @@ impl Todo {
 
         let json = serde_json::to_string(&content)?;
         std::fs::write(FILE_PATH, json)?;
+
+        Ok(())
+    }
+
+    pub fn remove_activity(id: usize) -> Result<(), Error> {
+        Self::create_if_not_present()?;
+
+        let mut activities = Self::read_from_file()?;
+
+        if id == 0 || id > activities.len() {
+            return Err(Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("Invalid ID: {}, Valid Range: 1-{}", id, activities.len()),
+            ));
+        }
+
+        let removed_activity = activities.remove(id - 1);
+
+        let json = serde_json::to_string_pretty(&activities)?;
+        std::fs::write(FILE_PATH, json)?;
+
+        println!("Removed: {}", removed_activity.name);
 
         Ok(())
     }
