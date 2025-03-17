@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_json;
 use std::fs::OpenOptions;
 use std::io::Error;
 
@@ -48,7 +47,41 @@ impl Todo {
 
         Ok(())
     }
-    
+
+    pub fn list_activities(&self) -> Result<(), Error> {
+        Self::create_if_not_present()?;
+
+        let content = Self::read_from_file().expect("Error reading from file.");
+
+        if content.is_empty() {
+            println!("Empty records.");
+            return Ok(());
+        }
+
+        println!(
+            "{:<4} {:<30} {:<10} {:<10}",
+            "ID", "Task", "Priority", "Status"
+        );
+        println!("{}", "-".repeat(60));
+
+        for (index, todo) in content.iter().enumerate() {
+            let status = if todo.completed { "Done" } else { "Not Done" };
+            println!(
+                "{:<4} {:<30} {:<10} {:<10}",
+                index + 1,
+                if todo.name.len() > 27 {
+                    format!("{}...", &todo.name[..27])
+                } else {
+                    todo.name.clone()
+                },
+                todo.priority,
+                status
+            );
+        }
+
+        Ok(())
+    }
+
     fn create_if_not_present() -> Result<(), Error> {
         OpenOptions::new()
             .create(true)
