@@ -4,6 +4,21 @@ use std::io::Error;
 
 const FILE_PATH: &str = "/home/buzzkill/Documents/Projects/rust/todo/todoFile.json";
 
+#[derive(clap::ValueEnum, Debug, Clone)]
+pub enum SortBy {
+    /// Sort by name alphabetically
+    Name,
+
+    /// Sort by priority (highest - lowest)
+    Priority,
+
+    /// Sort by completion status (completed first)
+    Status,
+
+    /// Sort by ID (default)
+    ID,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Todo {
     pub id: usize,
@@ -190,14 +205,33 @@ impl Todo {
         Ok(())
     }
 
-    pub fn list_activities(&self) -> Result<(), Error> {
+    pub fn list_activities(sort_by: SortBy, reverse: bool) -> Result<(), Error> {
         Self::create_if_not_present()?;
 
-        let content = Self::read_from_file().expect("Error reading from file.");
+        let mut content = Self::read_from_file().expect("Error reading from file.");
 
         if content.is_empty() {
             println!("Empty records.");
             return Ok(());
+        }
+
+        match sort_by {
+            SortBy::Name => {
+                content.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+            }
+            SortBy::Priority => {
+                content.sort_by(|a, b| b.priority.cmp(&a.priority));
+            }
+            SortBy::Status => {
+                content.sort_by(|a, b| b.completed.cmp(&a.completed));
+            }
+            SortBy::ID => {
+                content.sort_by(|a, b| a.id.cmp(&b.id));
+            }
+        }
+
+        if reverse {
+            content.reverse()
         }
 
         println!(
@@ -206,21 +240,27 @@ impl Todo {
         );
         println!("{}", "-".repeat(60));
 
-        for (index, todo) in content.iter().enumerate() {
-            let status = if todo.completed { "Done" } else { "Not Done" };
+        for activity in content.iter() {
+            let status = if activity.completed {
+                "Done"
+            } else {
+                "Not Done"
+            };
+
             println!(
                 "{:<4} {:<30} {:<10} {:<10}",
-                index + 1,
-                if todo.name.len() > 27 {
-                    format!("{}...", &todo.name[..27])
+                activity.id,
+                if activity.name.len() > 27 {
+                    format!("{}...", &activity.name[..27])
                 } else {
-                    todo.name.clone()
+                    activity.name.clone()
                 },
-                todo.priority,
+                activity.priority,
                 status
             );
         }
 
+        println!("\nTotal: {} activities", content.len());
         Ok(())
     }
 

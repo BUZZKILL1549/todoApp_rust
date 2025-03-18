@@ -32,8 +32,16 @@ enum Commands {
         completed: bool,
     },
 
-    /// List all ToDo items
-    List,
+    /// List all activities
+    List {
+        /// Sort by a specific field
+        #[arg(short, long, value_enum, default_value_t = SortBy::ID)]
+        sort: SortBy,
+
+        /// Reverse the sort order
+        #[arg(short, long, default_value_t = false)]
+        reverse: bool,
+    },
 
     /// Remove an activity
     Remove {
@@ -98,11 +106,8 @@ fn main() {
             println!("Added: {}", name);
         }
 
-        Some(Commands::List) => {
-            let todo =
-                Todo::new(0, String::new(), 0, false).expect("Failed to create temporary ToDo.");
-
-            todo.list_activities().expect("Failed to read from file.");
+        Some(Commands::List { sort, reverse }) => {
+            Todo::list_activities(sort.clone(), *reverse).expect("Failed to list activities.");
         }
 
         Some(Commands::Remove { id }) => {
