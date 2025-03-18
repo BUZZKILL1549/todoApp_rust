@@ -59,6 +59,25 @@ enum Commands {
         #[arg(short, long)]
         completed: Option<bool>,
     },
+
+    /// Search for an activity
+    Search {
+        /// Search by ID (optional)
+        #[arg(short, long)]
+        id: Option<usize>,
+
+        /// Search by name (optional)
+        #[arg(short, long)]
+        name: Option<String>,
+
+        /// Search by priority (optional)
+        #[arg(short, long)]
+        priority: Option<u8>,
+
+        /// Search by completion status (optional)
+        #[arg(short, long)]
+        completed: Option<bool>,
+    },
 }
 
 fn main() {
@@ -90,8 +109,29 @@ fn main() {
             Todo::remove_activity(*id).expect("Failed to remove activity.");
         }
 
-        Some(Commands::Edit { id, name, priority, completed }) => {
-            Todo::edit_activity(*id, name.clone(), *priority, *completed).expect("Failed to edit activity");
+        Some(Commands::Edit {
+            id,
+            name,
+            priority,
+            completed,
+        }) => {
+            Todo::edit_activity(*id, name.clone(), *priority, *completed)
+                .expect("Failed to edit activity");
+        }
+
+        Some(Commands::Search {
+            id,
+            name,
+            priority,
+            completed,
+        }) => {
+            let id_value = *id;
+            let name_clone = name.clone();
+            let priority_value = priority.map(|p| p);
+            let completed_value = completed.map(|c| c);
+
+            Todo::search_activities(id_value, name_clone, priority_value, completed_value)
+                .expect("Failed to search activity.");
         }
 
         None => {
