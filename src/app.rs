@@ -72,6 +72,39 @@ impl Todo {
         Ok(())
     }
 
+    pub fn edit_activity(id: usize, name: Option<String>, priority: Option<u8>, completed: Option<bool>) -> Result<(), Error> {
+        Self::create_if_not_present()?;
+
+        let mut activities = Self::read_from_file()?;
+
+        if id == 0 || id > activities.len() {
+            return Err(Error::new(
+                std::io::ErrorKind::InvalidInput,
+                format!("Invalid ID: {}, Valid range is: 1-{}", id, activities.len())
+            ));
+        }
+
+        let activity = &mut activities[id - 1];
+
+        if let Some(new_name) = name {
+            activity.name = new_name;
+        }
+
+        if let Some(new_priority) = priority {
+            activity.priority = new_priority;
+        }
+
+        if let Some(new_completed) = completed {
+            activity.completed = new_completed;
+        }
+
+        let json = serde_json::to_string_pretty(&activities)?;
+        std::fs::write(FILE_PATH, json)?;
+
+        println!("Updated activity. ID: {}", id);
+        Ok(())
+    }
+
     pub fn list_activities(&self) -> Result<(), Error> {
         Self::create_if_not_present()?;
 

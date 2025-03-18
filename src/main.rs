@@ -40,6 +40,25 @@ enum Commands {
         #[arg(short, long)]
         id: usize,
     },
+
+    /// Edit an activity
+    Edit {
+        /// ID of the activity
+        #[arg(short, long)]
+        id: usize,
+
+        /// Name of the activity (optional)
+        #[arg(short, long)]
+        name: Option<String>,
+
+        /// Priority of the activity (optional)
+        #[arg(short, long)]
+        priority: Option<u8>,
+
+        /// Status of the activity (optional)
+        #[arg(short, long)]
+        completed: Option<bool>,
+    },
 }
 
 fn main() {
@@ -69,6 +88,10 @@ fn main() {
 
         Some(Commands::Remove { id }) => {
             Todo::remove_activity(*id).expect("Failed to remove activity.");
+        }
+
+        Some(Commands::Edit { id, name, priority, completed }) => {
+            Todo::edit_activity(*id, name.clone(), *priority, *completed).expect("Failed to edit activity");
         }
 
         None => {
